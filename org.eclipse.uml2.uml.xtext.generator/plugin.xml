@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+	<!-- commands -->
+	<extension point="org.eclipse.ui.commands">
+		<!-- generate xtext grammar from uml model [command] -->
+		<command 
+			id="org.eclipse.uml2.uml.xtext.generator.commands.GenerateXtextGrammarFromUml"
+			name="%org.eclipse.uml2.uml.xtext.generator.commands.GenerareXtextGrammarFromUml.name">
+		</command>
+	</extension>
+	<!-- handlers -->
+	<extension point="org.eclipse.ui.handlers">
+		<!-- generate xtext grammar from uml model [handler] -->
+		<handler
+			class="org.eclipse.uml2.uml.xtext.generator.handlers.GenerateXtextGrammarFromUmlHandler"
+			commandId="org.eclipse.uml2.uml.xtext.generator.commands.GenerateXtextGrammarFromUml">
+		</handler>
+	</extension> 
+	<!-- menu contributions -->
+	<extension point="org.eclipse.ui.menus">
+		<!-- generate xtext grammar from uml model [contextual menu] -->
+		<menuContribution
+			locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+			<command
+				commandId="org.eclipse.uml2.uml.xtext.generator.commands.GenerateXtextGrammarFromUml"
+				label="%org.eclipse.uml2.uml.xtext.generator.commands.GenerateXtextGrammarFromUml.name">
+				<visibleWhen>
+					<with variable="activeMenuSelection">
+						<count value="1"/>
+						<iterate ifEmpty="false">
+							<instanceof value="org.eclipse.core.resources.IResource"/>
+							<test property="org.eclipse.core.resources.name" value="*.uml"/>	
+						</iterate>
+					</with>
+				</visibleWhen>
+			</command>
+		</menuContribution>
+	</extension>
+	<!-- new wizards -->
+	<extension point="org.eclipse.ui.newWizards">
+		<!-- UMLX wizards -->
+		<category
+			id="org.eclipse.uml2.uml.xtext.generator.wizards"
+			name="%org.eclipse.uml2.uml.xtext.generator.wizards.name">
+		</category>
+		<!-- generate xtext grammar from uml model [wizard] -->
+		<wizard
+			id="org.eclipse.uml2.uml.xtext.generator.wizards.GenerateXtextGrammarFromUmlWizard"
+			name="%org.eclipse.uml2.uml.xtext.generator.wizards.GenerateXtextGrammarFromUmlWizard.name"
+			class="org.eclipse.uml2.uml.xtext.generator.wizards.GenerateXtextGrammarFromUmlWizard"
+			category="org.eclipse.uml2.uml.xtext.generator.wizards">
+			<selection class="org.eclipse.core.resources.IResource" name="*.uml"/>
+		</wizard>
+	</extension>
+</plugin>
