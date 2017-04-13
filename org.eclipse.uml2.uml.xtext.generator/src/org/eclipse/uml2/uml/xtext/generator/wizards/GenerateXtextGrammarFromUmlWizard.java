@@ -1,10 +1,5 @@
 package org.eclipse.uml2.uml.xtext.generator.wizards;
 
-import java.util.AbstractMap.SimpleEntry;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -18,203 +13,102 @@ import org.eclipse.uml2.uml.resource.UMLResource;
 import org.eclipse.uml2.uml.xtext.generator.wizards.model.XtextGrammarGeneratorModel;
 import org.eclipse.uml2.uml.xtext.generator.wizards.pages.XtextGrammarContentPage;
 import org.eclipse.uml2.uml.xtext.generator.wizards.pages.XtextGrammarDetailsPage;
-import org.graphstream.graph.Graph;
-import org.graphstream.graph.implementations.MultiGraph;
 
 public class GenerateXtextGrammarFromUmlWizard extends Wizard implements INewWizard {
 
-	// current workbench
-	private IWorkbench workbench;
-	// current selection
-	private IStructuredSelection selection;
-	// grammar generator model
-	private XtextGrammarGeneratorModel xtextGrammarGeneratorModel;
-	// pages - grammar details
+	/**
+	 * WORKBENCH
+	 **/
+	private IWorkbench _workbench;
+	
+	/**
+	 * SELECTION 
+	 **/
+	private IStructuredSelection _selection;
+	
+	/**
+	 * XTEXT GRAMMAR GENERATOR MODEL
+	 **/
+	private XtextGrammarGeneratorModel _xtextGrammarGeneratorModel;
+	
+	/**
+	 * PAGE 1 - XTEXT GRAMMAR DETAILS 
+	 **/
 	private XtextGrammarDetailsPage _grammarDetailsPage = new XtextGrammarDetailsPage();
-	// pages - grammar content
+	
+	/**
+	 * PAGE 2 - XTEXT CONTENT PAGE 
+	 **/
 	private XtextGrammarContentPage _grammarContentPage = new XtextGrammarContentPage();
 
-	// Default Constructor
-	public GenerateXtextGrammarFromUmlWizard() {}
-
-	// Constructor
+	/**
+	 * CONSTRUCTOR (IWorkbench, IStructuredSelection) 
+	 **/
 	public GenerateXtextGrammarFromUmlWizard(IWorkbench workbench, IStructuredSelection selection) {
+		/* Superclass Constructor */
+		super();
+		/* Initialize Wizard */
 		this.init(workbench, selection);
 	}
 	
-	// retrieve grammar details page
+	/**
+	 * PAGE 1 - XTEXT GRAMMAR DETAILS (Get) 
+	 **/
 	public XtextGrammarDetailsPage grammarDetailsPage() {
+		/* Return Grammar Details Page */
 		return this._grammarDetailsPage;
 	}
 	
-	// retrieve grammar content page
+	/**
+	 * PAGE 2 - XTEXT GRAMMAR CONTENT (Get) 
+	 **/
 	public XtextGrammarContentPage grammarContentPage() {
+		/* Return Grammar Content Page */
 		return this._grammarContentPage;
 	}
 	
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
-		// store current workbench
-		this.workbench = workbench;
-		// store current selection
-		this.selection = selection;
-		// store resource and initialize graph model
+		/* Setup Workbench */
+		this._workbench = workbench;
+		/* Setup Selection */
+		this._selection = selection;
+		/* Initialize Xtext Grammar Generator Model */
 		if (selection instanceof ITreeSelection && selection.size() == 1 && selection.getFirstElement() instanceof IFile
-				&& ((IFile) selection.getFirstElement()).getName().endsWith(".uml")) {
-			// retrieve resource
+				&& ((IFile) selection.getFirstElement()).getFileExtension().equals("uml")) {
+			/* ResourceSet */
 			ResourceSet resourceSet = new ResourceSetImpl();
 			resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(UMLResource.FILE_EXTENSION,
 					UMLResource.Factory.INSTANCE);
+			/* Retrieve Resource URI */
 			URI resourceURI = URI.createURI(((IFile) selection.getFirstElement()).getFullPath().toString());
+			/* Retrieve UMLResource */
 			UMLResource resource = (UMLResource) resourceSet.getResource(resourceURI, true);
-			// retrieve model
-			if (resource.getContents().size() > 0
-					&& resource.getContents().get(0) instanceof org.eclipse.uml2.uml.Model) {
-				// retrieve model from resource
-				org.eclipse.uml2.uml.Model model = (org.eclipse.uml2.uml.Model) resource.getContents().get(0);
-				// create graph from model
-				this.xtextGrammarGeneratorModel = new XtextGrammarGeneratorModel(model.getName(), resourceURI.toString() + "Text",
-						populateGraphFrom(model, new MultiGraph(resourceURI.toString(), false, true), resource), resource);
-			}
+			/* Build Xtext Grammar Generator Model */
+			this._xtextGrammarGeneratorModel = new XtextGrammarGeneratorModel(resource);
 		}
 	}
-
+	
 	@Override
 	public void addPages() {
+		/* Add Grammar Details Page */
 		this.addPage(this._grammarDetailsPage);
+		/* Add Grammar Content Page */
 		this.addPage(this._grammarContentPage);
 	}
-
+	
 	@Override
 	public boolean performFinish() {
+		// se l'ultima pagina è completa, avviamo il processo di generazione della grammatica xtext
 		return this._grammarDetailsPage.isPageComplete() && this._grammarContentPage.isPageComplete();
 	}
-
-	@Override
-	public void dispose() {
-		// avvia processo di generazione della grammatica
-		super.dispose();
-	}
 	
-	// retrieve graph model
-	public XtextGrammarGeneratorModel getXtextGrammarGeneratorModel() {
-		return this.xtextGrammarGeneratorModel;
-	}
-
-	// populate graph from model
-	private Graph populateGraphFrom(org.eclipse.uml2.uml.Model _model, Graph _graph, UMLResource _resource) {
-		// primitive types
-		_model.getPackagedElements().stream()
-				.filter(_packagedElement -> _packagedElement instanceof org.eclipse.uml2.uml.PrimitiveType)
-				.map(org.eclipse.uml2.uml.PrimitiveType.class::cast)
-				.forEach(_primitiveType -> populateGraphFrom(_primitiveType, _model, _graph, _resource));
-		// enumerations
-		_model.getPackagedElements().stream()
-				.filter(_packagedElement -> _packagedElement instanceof org.eclipse.uml2.uml.Enumeration)
-				.map(org.eclipse.uml2.uml.Enumeration.class::cast)
-				.forEach(_enumeration -> populateGraphFrom(_enumeration, _model, _graph, _resource));
-		// classes
-		_model.getPackagedElements().stream()
-				.filter(_packagedElement -> _packagedElement instanceof org.eclipse.uml2.uml.Class)
-				.map(org.eclipse.uml2.uml.Class.class::cast)
-				.forEach(_class -> populateGraphFrom(_class, _model, _graph, _resource));
-		// return back populated graph
-		return _graph;
-	}
-
-	// populate graph from primitive type
-	private void populateGraphFrom(org.eclipse.uml2.uml.PrimitiveType _primitiveType, org.eclipse.uml2.uml.Model _model,
-			Graph _graph, UMLResource _resource) {
-		// primitive type
-		String edgeId = _resource.getURIFragment(_model) + "::::" + _resource.getURIFragment(_primitiveType);
-		String sourceId = _resource.getURIFragment(_model);
-		String targetId = _resource.getURIFragment(_primitiveType);
-		Map<String, Object> edgeAttributes = Stream
-				.of(new SimpleEntry<String, Object>("composition", true),
-						new SimpleEntry<String, Object>("selected", true))
-				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()));
-		_graph.addEdge(edgeId, sourceId, targetId, true).addAttributes(edgeAttributes);
-	}
-
-	// populate graph from enumeration
-	private void populateGraphFrom(org.eclipse.uml2.uml.Enumeration _enumeration, org.eclipse.uml2.uml.Model _model,
-			Graph _graph, UMLResource _resource) {
-		// enumeration
-		String edgeId = _resource.getURIFragment(_model) + "::::" + _resource.getURIFragment(_enumeration);
-		String sourceId = _resource.getURIFragment(_model);
-		String targetId = _resource.getURIFragment(_enumeration);
-		Map<String, Object> edgeAttributes = Stream
-				.of(new SimpleEntry<String, Object>("composition", true), 
-						new SimpleEntry<String, Object>("selected", true))
-				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue())); 
-		_graph.addEdge(edgeId, sourceId, targetId, true).addAttributes(edgeAttributes);
-		// enumeration literals
-		_enumeration.getOwnedLiterals().forEach(
-				_enumerationLiteral -> populateGraphFrom(_enumerationLiteral, _enumeration, _graph, _resource));
-	}
-
-	// populate graph from enumeration literal
-	private void populateGraphFrom(org.eclipse.uml2.uml.EnumerationLiteral _enumerationLiteral,
-			org.eclipse.uml2.uml.Enumeration _enumeration, Graph _graph, UMLResource _resource) {
-		// enumeration literal
-		String edgeId = _resource.getURIFragment(_enumeration) + "::::" + _resource.getURIFragment(_enumerationLiteral);
-		String sourceId = _resource.getURIFragment(_enumeration);
-		String targetId = _resource.getURIFragment(_enumerationLiteral);
-		Map<String, Object> edgeAttributes = Stream
-				.of(new SimpleEntry<String, Object>("composition", true), 
-						new SimpleEntry<String, Object>("selected", true))
-				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue()));
-		_graph.addEdge(edgeId, sourceId, targetId, true).addAttributes(edgeAttributes);
-	}
-
-	// populate graph from class
-	private void populateGraphFrom(org.eclipse.uml2.uml.Class _class, org.eclipse.uml2.uml.Model _model, Graph _graph,
-			UMLResource _resource) {
-		// class
-		String edgeId = _resource.getURIFragment(_model) + "::::" + _resource.getURIFragment(_class);
-		String sourceId = _resource.getURIFragment(_model);
-		String targetId = _resource.getURIFragment(_class);
-		Map<String, Object> edgeAttributes = Stream
-				.of(new SimpleEntry<String, Object>("composition", true), 
-						new SimpleEntry<String, Object>("selected", true))
-				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue())); 
-		_graph.addEdge(edgeId, sourceId, targetId, true).addAttributes(edgeAttributes);
-		// properties
-		_class.getAttributes().forEach(_property -> {
-			if (_property.getType() != null) {
-				populateGraphFrom(_property, _class, _graph, _resource);
-			}
-		});
-		// superclasses
-		_class.getSuperClasses().forEach(_superClass -> populateGraphFrom(_class, _superClass, _graph, _resource));
-
-	}
-
-	// populate graph from property
-	private void populateGraphFrom(org.eclipse.uml2.uml.Property _property, org.eclipse.uml2.uml.Class _class,
-			Graph _graph, UMLResource _resource) {
-		// attribute
-		String edgeId = _resource.getURIFragment(_property);
-		String sourceId = _resource.getURIFragment(_class);
-		String targetId = _resource.getURIFragment(_property.getType());
-		Map<String, Object> edgeAttributes = Stream
-				.of(new SimpleEntry<String, Object>("composition", _property.isComposite()), 
-						new SimpleEntry<String, Object>("selected", true))
-				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue())); 
-		_graph.addEdge(edgeId, sourceId, targetId, true).addAttributes(edgeAttributes);
-	}
-
-	// populate graph from superclass
-	private void populateGraphFrom(org.eclipse.uml2.uml.Class _class, org.eclipse.uml2.uml.Class _superClass,
-			Graph _graph, UMLResource _resource) {
-		String edgeId = _resource.getURIFragment(_superClass) + "::::" + _resource.getURIFragment(_class);
-		String sourceId = _resource.getURIFragment(_superClass);
-		String targetId = _resource.getURIFragment(_class);
-		Map<String, Object> edgeAttributes = Stream
-				.of(new SimpleEntry<String, Object>("composition", true), 
-						new SimpleEntry<String, Object>("selected", true))
-				.collect(Collectors.toMap((e) -> e.getKey(), (e) -> e.getValue())); 
-		_graph.addEdge(edgeId, sourceId, targetId, true).addAttributes(edgeAttributes);
+	/**
+	 * XTEXT GRAMMAR GENERATOR MODEL (Get) 
+	 **/
+	public XtextGrammarGeneratorModel xtextGrammarGeneratorModel() {
+		/* Return Xtext Grammar Generator Model */
+		return this._xtextGrammarGeneratorModel;
 	}
 
 }

@@ -14,107 +14,124 @@ import org.eclipse.uml2.uml.xtext.generator.wizards.GenerateXtextGrammarFromUmlW
 
 public class XtextGrammarDetailsPage extends WizardPage implements Listener {
 
-	private Text grammarName;
-	private Text grammarURI;
+	/**
+	 * GRAMMAR NAME
+	 **/
+	private Text _grammarName;
 
+	/**
+	 * GRAMMAR URI
+	 **/
+	private Text _grammarURI;
+
+	/**
+	 * CONSTRUCTOR
+	 **/
 	public XtextGrammarDetailsPage() {
+		/* Superclass Constructor */
 		super("Page 1");
+		/* Setup Title */
 		this.setTitle("Xtext Grammar Details");
+		/* Setup Description */
 		this.setDescription("Insert grammar name and uri");
 	}
 
 	@Override
 	public void createControl(Composite parent) {
-		// composite containing widgets
+		/* Widgets Composite */
 		Composite composite = new Composite(parent, SWT.NONE);
-		// page layout
+		/* Page Layout */
 		GridLayout pageLayout = new GridLayout(4, true);
 		composite.setLayout(pageLayout);
-		// text fields layout
+		/* Text Fields Layout */
 		GridData textFieldLayout = new GridData(GridData.FILL_HORIZONTAL);
 		textFieldLayout.horizontalSpan = 3;
-		// setup grammar name text field
+		/* Setup Grammar Name Text Field */
 		new Label(composite, SWT.NONE).setText("Grammar Name: ");
-		this.grammarName = new Text(composite, SWT.BORDER);
-		this.grammarName.setLayoutData(textFieldLayout);
-		this.grammarName.setText(
-				((GenerateXtextGrammarFromUmlWizard) this.getWizard()).getXtextGrammarGeneratorModel().grammarName());
-		// setup grammar uri text field
+		this._grammarName = new Text(composite, SWT.BORDER);
+		this._grammarName.setLayoutData(textFieldLayout);
+		this._grammarName.setText(
+				((GenerateXtextGrammarFromUmlWizard) this.getWizard()).xtextGrammarGeneratorModel().grammarName());
+		/* Setup Grammar URI Text Field */
 		new Label(composite, SWT.NONE).setText("Grammar URI: ");
-		this.grammarURI = new Text(composite, SWT.BORDER);
-		this.grammarURI.setLayoutData(textFieldLayout);
-		this.grammarURI.setText(
-				((GenerateXtextGrammarFromUmlWizard) this.getWizard()).getXtextGrammarGeneratorModel().grammarURI());
-		// setup page control
+		this._grammarURI = new Text(composite, SWT.BORDER);
+		this._grammarURI.setLayoutData(textFieldLayout);
+		this._grammarURI.setText(
+				((GenerateXtextGrammarFromUmlWizard) this.getWizard()).xtextGrammarGeneratorModel().grammarURI());
+		/* Setup Page Control */
 		this.setControl(composite);
-		// setup widget listeners
+		/* Setup Widget Listeners */
 		this.attachListeners();
 	}
 
 	@Override
 	public void handleEvent(Event event) {
-		// update buttons to reflect possible page completion
+		/* Update Buttons (Page Completion) */
 		this.getWizard().getContainer().updateButtons();
-	}
-
-	// update xtext grammar generator model
-	private void updateXtextGrammarGeneratorModel() {
-		if (this.getWizard() instanceof GenerateXtextGrammarFromUmlWizard) {
-			// update grammar name
-			((GenerateXtextGrammarFromUmlWizard) this.getWizard()).getXtextGrammarGeneratorModel()
-					.grammarName(this.grammarName.getText());
-			// update grammar uri
-			((GenerateXtextGrammarFromUmlWizard) this.getWizard()).getXtextGrammarGeneratorModel()
-					.grammarURI(this.grammarURI.getText());
-		}
-	}
-
-	// attach listeners
-	private void attachListeners() {
-		// attach listener to grammar name text field
-		this.grammarName.addListener(SWT.KeyUp, this);
-		// attach listener to grammar uri text field
-		this.grammarURI.addListener(SWT.KeyUp, this);
-	}
-
-	// detach listeners
-	private void detachListeners() {
-		// remove listener from grammar name text field
-		this.grammarName.removeListener(SWT.KeyUp, this);
-		// remove listener from grammar URI text field
-		this.grammarURI.removeListener(SWT.KeyUp, this);
 	}
 
 	@Override
 	public boolean isPageComplete() {
-		// grammar name and uri are not empty
-		return this.isComplete(grammarName) && this.isComplete(grammarURI);
-	}
-
-	// check if the current page is complete
-	private boolean isComplete(Text text) {
-		// text field has been filled with a non-empty string
-		return text.getText() != null && text.getText().trim().length() > 0;
-	}
-
-	@Override
-	public void dispose() {
-		super.dispose();
-		// detach listeners
-		this.detachListeners();
-		// update grammar name and uri
-		this.updateXtextGrammarGeneratorModel();
-		// [DEBUG]
-		System.err.println("XtextGrammarDetails - Page disposed");
-		System.err.println("Grammar Name : "
-				+ ((GenerateXtextGrammarFromUmlWizard) this.getWizard()).getXtextGrammarGeneratorModel().grammarName());
-		System.err.println("Grammar URI : "
-				+ ((GenerateXtextGrammarFromUmlWizard) this.getWizard()).getXtextGrammarGeneratorModel().grammarURI());
+		/* Page Complete - Non-Empty Fields */
+		return this.isComplete(_grammarName) && this.isComplete(_grammarURI);
 	}
 
 	@Override
 	public IWizardPage getNextPage() {
+		/* Detach Listeners */
+		this.detachListeners();
+		/* Update Grammar Name and Grammar URI */
+		this.updateXtextGrammarGeneratorModel();
+		/* Return Xtext Grammar Content Page */
 		return ((GenerateXtextGrammarFromUmlWizard) this.getWizard()).grammarContentPage();
+	}
+
+	@Override
+	public boolean canFlipToNextPage() {
+		/* Page Complete - Non-Empty Fields */
+		return this.isComplete(this._grammarName) && this.isComplete(this._grammarURI);
+	}
+
+	/**
+	 * XTEXT GRAMMAR GENERATOR MODEL (Update)
+	 **/
+	private void updateXtextGrammarGeneratorModel() {
+		if (this.getWizard() instanceof GenerateXtextGrammarFromUmlWizard) {
+			/* Update Grammar Name */
+			((GenerateXtextGrammarFromUmlWizard) this.getWizard()).xtextGrammarGeneratorModel()
+					.grammarName(this._grammarName.getText());
+			/* Update Grammar URI */
+			((GenerateXtextGrammarFromUmlWizard) this.getWizard()).xtextGrammarGeneratorModel()
+					.grammarURI(this._grammarURI.getText());
+		}
+	}
+
+	/**
+	 * LISTENERS - ATTACH
+	 **/
+	private void attachListeners() {
+		/* Grammar Name - Attach KeyUp */
+		this._grammarName.addListener(SWT.KeyUp, this);
+		/* Grammar URI - Attach KeyUp */
+		this._grammarURI.addListener(SWT.KeyUp, this);
+	}
+
+	/**
+	 * LISTENERS - DETACH
+	 **/
+	private void detachListeners() {
+		/* Grammar Name - Detach KeyUp */
+		this._grammarName.removeListener(SWT.KeyUp, this);
+		/* Grammar URI - Detach KeyUp */
+		this._grammarURI.removeListener(SWT.KeyUp, this);
+	}
+
+	/**
+	 * COMPLETION CHECK - TEXT FIELD
+	 **/
+	private boolean isComplete(Text _text) {
+		/* Non-empty Text Field */
+		return _text.getText() != null && _text.getText().trim().length() > 0;
 	}
 
 }
